@@ -1,0 +1,13 @@
+name: water-potability
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - ipykernel
+  - seaborn
+  - pandas
+  - jupyter
+  - numpy
+  - scikit-learn
+  - matplotlib
+prefix: /home/muhammad-ammar/miniforge3/envs/water-potability
