@@ -2,19 +2,25 @@
 
 An end-to-end machine learning project that predicts diabetes risk from public health indicators, served through a FastAPI backend and a browser-based prediction UI.
 
-**Author:** Muhammad Ammar ·
+### ▶ Try the live demo: **<https://cdc-diabetes-health-indicators.vercel.app/>**
+
+No setup required — open the link, fill the form (or press **Randomise Inputs**), and submit. The frontend and the FastAPI backend are both deployed on Vercel.
+
+**Author:** Muhammad Ammar · **Repository:** [mu-3mar/cdc-diabetes-health-indicators](https://github.com/mu-3mar/cdc-diabetes-health-indicators)
+
 | | |
 |---|---|
+| **Live demo** | <https://cdc-diabetes-health-indicators.vercel.app/> — frontend + API on Vercel (verified responding: `POST /predict` → 200) |
 | **Task** | Binary classification (`Diabetes_binary`: 0 = no diabetes, 1 = diabetes/prediabetes) |
 | **Data** | CDC Diabetes Health Indicators (BRFSS 2015) — 253,680 rows × 22 columns raw → 229,474 × 22 after cleaning |
 | **Final model** | Logistic Regression (balanced), decision threshold 0.6 |
 | **Final test metrics** | Accuracy 0.775 · PR-AUC 0.412 · class-1 Precision 0.366 / Recall 0.642 / F1 0.466 |
-| **Stack** | Python · scikit-learn · imbalanced-learn · joblib · FastAPI/Uvicorn · vanilla HTML/CSS/JS |
-| **Status** | Local end-to-end flow verified working. **Not deployed.** No test suite. Not containerised. |
+| **Stack** | Python · scikit-learn · imbalanced-learn · joblib · FastAPI/Uvicorn · vanilla HTML/CSS/JS · Vercel |
+| **Status** | Deployed and working end to end. No test suite. Not containerised. |
 
 > **Not a medical device.** This model outputs a statistical risk estimate from survey indicators. It is **not** a diagnosis, does not replace clinical testing, and must not be used to make health decisions.
 >
-> **Documentation scope.** Everything below was verified by inspecting the notebooks, source, artifacts and application, and by executing the model artifact and API locally. Hosting limits in [§10](#10-deployment) come from external vendor documentation and are labelled as such. Anything not verifiable from the repository is marked **TODO**.
+> **Documentation scope.** Everything below was verified by inspecting the notebooks, source, artifacts and application, by executing the model and API locally, and by calling the deployed demo as an external client. Hosting limits in [§10](#10-deployment) come from vendor documentation and are labelled as such. Anything not verifiable is marked **TODO**.
 
 ---
 
@@ -45,7 +51,7 @@ An end-to-end machine learning project that predicts diabetes risk from public h
 - Establish baseline performance for several classifiers on an imbalanced target.
 - Test whether class-imbalance handling (class weights, over/under-sampling, SMOTE) actually improves the metric that matters — **recall on the positive class** — rather than just accuracy.
 - Tune and threshold the selected model without touching the test set until decisions are frozen.
-- Ship the model behind a documented REST API and a usable web interface.
+- Ship the model behind a documented REST API and a usable web interface, and deploy it.
 
 **Input / output.** Input is 21 numeric feature values describing one person. Output is a binary class (`0`/`1`), the positive-class probability, and the decision threshold used — so the caller can see how close the decision was.
 
@@ -56,14 +62,20 @@ BRFSS 2015 raw CSV (253,680 × 22)
    └─ 01 initial exploration ──► 02 cleaning (dedupe) ──► 03/04/05 EDA
         └─ 06 feature preparation (train/test split) ──► 07 modeling, tuning, thresholding
              └─ models/diabetes_model.joblib  {model, threshold=0.6, features}
-                  └─ FastAPI (src/main.py)  ──►  Web UI (frontend/)
+                  └─ FastAPI (src/main.py)  ──►  Web UI  ──►  Vercel deployment
 ```
 
 ---
 
 ## 2. Dataset
 
-**Source.** [C[C/cdc+disrchivalita.Lcp.i u/891//3c+heBrchivsuire.ict.e2u/; befor/891/sic+he CDC B+5 surv+yn | Prrep(,, derived from the CDC BRFSS 2015 survey | Rareposisoryashppe | 25,6 download8s0rwp  or URL22 uhe s | filewsplmualy, stheacqisiionph n access e re **TOO.bfrereibutin,cUCI(s)
+**Source.** Downloaded from the Kaggle mirror [Diabetes Health Indicators Dataset](https://www.kaggle.com/datasets/alexteboul/diabetes-health-indicators-dataset), which distributes the file `diabetes_binary_health_indicators_BRFSS2015.csv` — the same filename the notebooks read. That dataset republishes the **CDC Diabetes Health Indicators** (BRFSS 2015), also distributed by the UCI ML Repository (dataset ID 891, DOI `10.24432/C53919`).
+
+The data is **not** committed — `data/raw/` and `data/processed/` are git-ignored. **Download link and expected layout: [data/README.md](data/README.md).** The raw CSV in the working tree is dated `2021-11-08`; the exact download date is not recorded (**TODO**). Confirm the Kaggle/CDC/UCI usage terms before redistributing — no licence statement is included in this repository.
+
+| Property | Value |
+|---|---|
+| Raw shape | 253,680 rows × 22 columns |
 | Cleaned shape | 229,474 rows × 22 columns |
 | Train / test split | 183,579 / 45,895 (80/20, stratified, `random_state=42`) |
 | Model features | 21 (all columns except the target) |
@@ -321,10 +333,10 @@ def predict(input_data: dict) -> dict:
     return {"prediction": prediction, "probability": round(probability, 4), "threshold": THRESHOLD}
 ```
 
-**What the app returns:** a class label (`0`/`1`), the positive-class probability rounded to 4 dp, and the threshold — never a bare "yes/no". Example (verified by running the API locally):
+**What the app returns:** a class label (`0`/`1`), the positive-class probability rounded to 4 dp, and the threshold — never a bare "yes/no". Example (verified against both the local API and the deployed demo):
 
 ```json
-{ "prediction": 0, "probability": 0.2854, "threshold": 0.6 }
+{ "prediction": 1, "probability": 0.6996, "threshold": 0.6 }
 ```
 
 **Compatibility.** Trained and verified with scikit-learn 1.9.1 / joblib 1.6.0. Loading the artifact under a different scikit-learn version may emit `InconsistentVersionWarning`; pin the version or retrain (see [§9](#9-installation--usage)).
@@ -337,7 +349,7 @@ def predict(input_data: dict) -> dict:
 
 ```mermaid
 graph TD
-    subgraph Data["Data & experimentation (not part of runtime)"]
+    subgraph Data["Data & experimentation (development-time only)"]
         RAW["data/raw/diabetes_binary_health_indicators_BRFSS2015.csv<br/>253,680 x 22"]
         NB["notebooks/01-06<br/>EDA, cleaning, feature preparation"]
         TR["src/train.py"]
@@ -345,17 +357,17 @@ graph TD
         RAW --> NB --> TR --> ART
     end
 
-    subgraph Runtime["Runtime"]
-        UI["frontend/index.html + app.js + styles.css<br/>21 inputs, randomise, probability meter"]
-        API["src/main.py - FastAPI<br/>GET / and POST /predict"]
+    subgraph Runtime["Runtime (deployed on Vercel)"]
+        UI["public/ static frontend<br/>21 inputs, randomise, probability meter"]
+        API["src/main.py - FastAPI<br/>POST /predict"]
         PRED["src/predict.py<br/>reindex to feature order, predict_proba"]
-        UI -->|"HTTP POST /predict, 21 features as JSON"| API --> PRED
-        PRED -->|"model + threshold from artifact"| ART
+        UI -->|"POST /predict, 21 features as JSON"| API --> PRED
+        PRED -->|"loads model + threshold"| ART
         API -->|"prediction, probability, threshold"| UI
     end
 ```
 
-The notebooks and `src/train.py` are offline/development-time only; the runtime path is artifact → API → browser. Training and serving share one artifact, which is what keeps their preprocessing identical.
+The notebooks and `src/train.py` are offline/development-time only; the runtime path is artifact → API → browser. Training and serving share one artifact, which is what keeps their preprocessing identical. In the deployment, `public/` and `src/main.py` are served by the **same Vercel origin**, so the browser talks to the API without any cross-origin request.
 
 ---
 
@@ -370,10 +382,21 @@ The notebooks and `src/train.py` are offline/development-time only; the runtime 
 
 There is **no** `/health` endpoint — `/` serves that purpose, and it does not check the artifact.
 
+**Deployed behaviour.** On Vercel the API and the static frontend share one origin, and the static page takes precedence for `GET /`:
+
+```bash
+GET  https://cdc-diabetes-health-indicators.vercel.app/            # 200 text/html  (frontend)
+POST https://cdc-diabetes-health-indicators.vercel.app/predict     # 200 application/json
+GET  https://cdc-diabetes-health-indicators.vercel.app/openapi.json# 200  (FastAPI schema)
+GET  https://cdc-diabetes-health-indicators.vercel.app/predict     # 405  (POST-only route)
+```
+
+All four responses were verified from outside the deployment. The OpenAPI schema reports the app as `Diabetes Prediction API` v1.0.0 with paths `/` and `/predict`.
+
 **Request schema.** Pydantic model with `features: dict[str, float]`. All 21 keys must be present; unknown keys are ignored.
 
 ```bash
-curl -X POST http://127.0.0.1:8000/predict \
+curl -X POST https://cdc-diabetes-health-indicators.vercel.app/predict \
   -H "Content-Type: application/json" \
   -d '{"features":{"HighBP":1,"HighChol":1,"CholCheck":1,"BMI":31,"Smoker":0,"Stroke":0,
        "HeartDiseaseorAttack":0,"PhysActivity":1,"Fruits":1,"Veggies":1,"HvyAlcoholConsump":0,
@@ -388,11 +411,11 @@ curl -X POST http://127.0.0.1:8000/predict \
 - Range checks are **not** enforced server-side (e.g. a negative `BMI` is accepted and will produce a meaningless probability). This is a known gap, listed in [§11](#11-limitations--future-improvements).
 - Model loading is a module-level import (`_ensure_loaded()` in `predict.py`); if the artifact is unreadable the app fails at import/startup rather than per request.
 
-**CORS.** `CORSMiddleware` currently allows `http://127.0.0.1:5500`, `http://localhost:5500` and the literal origin `"null"` (which browsers send for `file://` pages). The deployed frontend's origin must be added here or every request will fail preflight. `allow_credentials=True` combined with `"null"` is loose by default — tighten both before exposing the API publicly.
+**CORS.** `CORSMiddleware` allows `http://127.0.0.1:5500`, `http://localhost:5500` and the literal origin `"null"` (which browsers send for `file://` pages). This only matters for **local development** — the deployed frontend calls a same-origin API, so no preflight is involved. `allow_credentials=True` combined with `"null"` is loose by default; tighten both if the API is ever exposed to other origins.
 
-### 8.2 Web frontend ([`frontend/`](frontend))
+### 8.2 Web frontend ([`frontend/`](frontend), [`public/`](public))
 
-Static, dependency-free HTML/CSS/JS — three files plus a logo widget. It mirrors the model's 21 features one-to-one:
+Static, dependency-free HTML/CSS/JS — three files plus a logo widget. **`frontend/` and `public/` are byte-identical copies**: `frontend/` is the working copy, `public/` is Vercel's static output directory. Edit one, copy to the other.
 
 | UI control | Features |
 |---|---|
@@ -405,17 +428,18 @@ Behaviour worth knowing:
 
 - **`GenHlth` is displayed inverted.** The dropdown shows Excellent→Poor for humans and sends `6 - selected` to match the survey's 1–5 encoding.
 - **Randomise Inputs** fills every control with random but valid values and clears any previous result.
-- **Prediction flow:** collect → build the 21-key `features` object → `POST /predict` → render probability bar, predicted class, and a disclaimer. Network or HTTP errors surface as a readable message instead of a silent failure.
+- **Prediction flow:** collect → build the 21-key `features` object → `POST ${API_BASE}/predict` → render probability bar, predicted class, and a disclaimer. Network or HTTP errors surface as a readable message instead of a silent failure.
+- **API status pill:** on load the page calls `GET ${API_BASE}/` and shows a live indicator (`#api-status`). On Vercel that request hits the static page, not the API's root handler, so the pill reflects reachability rather than model health.
 - **Design system:** tokens in [`styles.css`](frontend/styles.css) — background `#fff8f5`, accent `#f04b24`, success `#15803d`, dark text `#29201d`. The animated logo is a self-contained SVG ([`logo-animated.html`](frontend/logo-animated.html), ~207 KB) embedded in an `iframe`, supporting `?color=#RRGGBB`; it does not affect prediction logic.
-- **API URL:** `API_BASE = "http://127.0.0.1:8000"` is hard-coded on line 1 of [`app.js`](frontend/app.js#L1) and must be changed to the public backend URL for any deployment.
+- **API URL:** `API_BASE = ""` on line 1 of [`app.js`](frontend/app.js#L1) — an empty base means *same origin*, which is what the Vercel deployment relies on. To point the UI at a different backend, set it to that backend's absolute URL.
 
-> `127.0.0.1` always means *the machine running the browser*. On any other device it will point at that device, not at your server — hence the need to replace it with the deployed API URL (and to add the frontend's origin to the API's CORS list).
+> `127.0.0.1` always means *the machine running the browser*. If you serve the frontend locally while the API runs elsewhere, set `API_BASE` to the API's absolute URL — and add the frontend's origin to the API's CORS list.
 
 ---
 
 ## 9. Installation & Usage
 
-**Prerequisites.** Python 3.10+ (verified with 3.12.14). No Node.js required — the frontend is static. The dataset and the trained artifact are both required: the repo ships the artifact, but `data/` is git-ignored.
+**Prerequisites.** Python 3.10+ (verified with 3.12.14; `pyproject.toml` requires ≥3.12). No Node.js required — the frontend is static. The dataset is required to retrain; the trained artifact is already committed.
 
 ```bash
 # 1. Clone
@@ -426,17 +450,19 @@ cd cdc-diabetes-health-indicators
 python -m venv .venv && source .venv/bin/activate     # macOS/Linux
 # python -m venv .venv && .venv\Scripts\activate      # Windows
 
-# 3. Install dependencies  (no requirements.txt exists - install explicitly)
-pip install "scikit-learn==1.9.1" "pandas==3.0.6" "numpy==2.5.3" "scipy==1.18.1" \
-            "joblib==1.6.0" "fastapi==0.162.0" "uvicorn==0.54.0" "imbalanced-learn==0.14.2"
+# 3. Install dependencies
+pip install -r requirements.txt        # fastapi uvicorn joblib pandas scikit-learn numpy (unpinned)
+# For exact reproducibility (notebooks + serving), pin instead:
+#   pip install "scikit-learn==1.9.1" "pandas==3.0.6" "numpy==2.5.3" "scipy==1.18.1" \
+#               "joblib==1.6.0" "fastapi==0.162.0" "uvicorn==0.54.0" "imbalanced-learn==0.14.2"
 
-# 4. Place the dataset
+# 4. Place the dataset  (only needed to retrain)
 #    Download from https://www.kaggle.com/datasets/alexteboul/diabetes-health-indicators-dataset
 #    and put diabetes_binary_health_indicators_BRFSS2015.csv at:
 #    data/raw/diabetes_binary_health_indicators_BRFSS2015.csv
 ```
 
-> **`environment.yml` caveat.** The repo contains [environment.yml](environment.yml), but it is named `water-potability`, omits several required packages (no `fastapi`, `uvicorn`, `joblib`, `imbalanced-learn`), and carries a hard-coded `prefix`. Treat it as stale; use the explicit `pip install` above.
+> **Dependency notes.** [`requirements.txt`](requirements.txt) lists the six packages the **API** needs, without version pins. [`pyproject.toml`](pyproject.toml) declares the same set plus `[tool.vercel] entrypoint = "src.main:app"` for the deployment. Neither includes `scipy` (imported indirectly by scikit-learn) or `imbalanced-learn`/`matplotlib`/`seaborn` (needed only by the notebooks). [`environment.yml`](environment.yml) is stale — it is named `water-potability`, omits several packages and carries a hard-coded `prefix`.
 
 ```bash
 # 5. (Optional) Retrain - reproduces models/diabetes_model.joblib
@@ -450,7 +476,7 @@ uvicorn src.main:app --reload
 
 # 7. Serve the frontend  (in a second terminal)
 python -m http.server 5500 --directory frontend
-# -> http://127.0.0.1:5500
+# -> http://127.0.0.1:5500      (serve `public/` instead to preview exactly what Vercel hosts)
 ```
 
 **Verify the full flow**
@@ -460,57 +486,70 @@ curl http://127.0.0.1:8000/          # {"message":"Diabetes Prediction API is ru
 # then POST /predict as shown in 8.1 - expect {"prediction":..., "probability":..., "threshold":0.6}
 ```
 
-Open `http://127.0.0.1:5500`, fill the form (or press **Randomise Inputs**), submit, and confirm a probability appears. Browser devtools → Network should show a `200` on `POST http://127.0.0.1:8000/predict`.
+Open `http://127.0.0.1:5500`, fill the form (or press **Randomise Inputs**), submit, and confirm a probability appears. The frontend uses a same-origin `API_BASE`, so to test it locally against the local API set `API_BASE = "http://127.0.0.1:8000"` in `app.js`.
 
-**Reproducing from raw data:** run the notebooks in order, `01 → 07`. Notebooks 02 and 06 write the CSVs that `src/train.py` consumes; notebook 07 produces the metrics in [§5](#5-model-development--evaluation). Notebook 07's exploratory cells re-fit several models and take noticeably longer than the rest.
+**Reproducing from raw data:** run the notebooks in order, `01 → 07`. Notebooks 02 and 06 write the CSVs that `src/train.py` consumes; notebook 07 produces the metrics in [§5](#5-model-development--evaluation) and is by far the slowest, since its exploratory cells re-fit several models.
 
 ---
 
 ## 10. Deployment
 
-> **Current status: not deployed.** There is no `Dockerfile`, no `vercel.json`, no CI workflow, no hosting configuration and no public URL in this repository. Everything in this section is a **plan**, and each step below is future work. Hosting numbers come from vendor documentation (August–October 2026) and must be re-checked against official pages before you rely on them.
+### 10.1 Current status — live on Vercel
 
-### 10.1 Vercel
+**Deployed and verified working:** <https://cdc-diabetes-health-indicators.vercel.app/>
 
-- **Static frontend — good fit.** `frontend/` is plain HTML/CSS/JS and can be deployed as a static site with no build step. The only change needed is `API_BASE` in `app.js` pointing at a public API URL.
-- **FastAPI backend — technically possible, operationally risky.** Vercel runs Python as serverless functions, which suits this app's dependency set but not its lifecycle:
+| Piece | How it is configured in the repository |
+|---|---|
+| Frontend | [`public/`](public) served as static output (`index.html`, `app.js`, `styles.css`, `logo-animated.html`) |
+| Backend | [`src/main.py`](src/main.py) as a Python function, wired by `[tool.vercel] entrypoint = "src.main:app"` in [`pyproject.toml`](pyproject.toml) |
+| Python deps | [`requirements.txt`](requirements.txt) (also declared in `pyproject.toml`) |
+| Routing | [`vercel.json`](vercel.json) — currently `{}` (Vercel defaults; frontend at `/`, API at `/predict`) |
+| Model artifact | [`models/diabetes_model.joblib`](models/diabetes_model.joblib) is committed, so the function can load it at cold start |
+| Browser → API | `API_BASE = ""` in `app.js` → **same origin**, so no CORS preflight in production |
 
-| Limit (Hobby) | Value | Implication here |
+**Verified from outside** (`GET /` → 200 HTML; `POST /predict` → 200 with `{"prediction":1,"probability":0.6996,"threshold":0.6}` in ≈0.5 s; `/openapi.json` → 200; `GET /predict` → 405).
+
+**Known characteristics of this deployment**
+
+- **Cold starts.** The first request after idle has to initialise a scientific-Python runtime and load the model — expect noticeably higher latency than the ≈0.5 s warm figure.
+- **No custom domain or health monitoring**, and the deployment is only partly reproducible from the repo: `vercel.json` is empty, so project settings (root directory, build settings) live in the Vercel dashboard, not in git. **TODO:** export that configuration into `vercel.json`.
+- **Free-plan resource limits** apply (below) — fine for a demo, not sized for production traffic.
+
+### 10.2 Vercel limits this deployment lives within
+
+| Limit (Hobby plan) | Value | Implication here |
 |---|---|---|
-| Max function duration | 300 s (default and maximum) | Peak is fine; cold starts dominate latency |
+| Max function duration | 300 s (default and maximum) | Peak usage is far below this; cold start dominates latency |
 | Memory / CPU | 2 GB / 1 vCPU, fixed | Ample — the artifact is 3.75 KB |
-| Bundle size (uncompressed) | 250 MB, 500 MB for Python (up to 5 GB via *Large functions*, beta) | scikit-learn + SciPy + pandas + joblib must fit; verify with a real build, not an estimate |
+| Bundle size (uncompressed) | 250 MB, 500 MB for Python (up to 5 GB via *Large functions*, beta) | scikit-learn + SciPy + pandas + joblib must fit; verify in the dashboard rather than assuming |
 | Request/response payload | 4.5 MB | Irrelevant for 21 scalars |
-| Concurrency | Auto-scales (Hobby) | Fine |
-| Region | Single region by default (`iad1`) | Latency for non-US users unless changed |
+| Concurrency | Auto-scales | Fine |
+| Region | Single region by default (`iad1`) | Higher latency for users outside the US unless the region is changed |
 
-  The real costs are: cold starts while a large scientific-Python bundle initialises, the model being reloaded per instance, and needing to add the frontend origin to CORS after the backend URL is known.
+Source: [Vercel Functions limits](https://vercel.com/docs/functions/limitations). Verify against the official page before relying on any number.
 
-### 10.2 Oracle Cloud Infrastructure (Always Free)
+### 10.3 Alternative: Oracle Cloud Infrastructure (Always Free)
 
-- **Fits the application well.** An always-on Linux VM can run Uvicorn (directly or in Docker) 24/7 with no cold starts and no per-request limits — the opposite trade-off from serverless, and better suited to a persistent Python model.
+Not implemented — this is the option to consider if you need an always-on process instead of serverless.
+
+- **Fits the application well.** An always-on Linux VM can run Uvicorn (directly or in Docker) 24/7 with no cold starts and no per-request limits.
 - **Always Free compute.** A1.Flex (Arm): **1,500 OCPU-hours + 9,000 GB-hours per month**, i.e. the equivalent of **2 OCPUs / 12 GB** running continuously, or two 1-OCPU instances. This was **halved from 4 OCPUs / 24 GB (3,000 / 18,000) in June 2026**; some official pages still display the older figures, so confirm your tenancy's quota in the console. Also included: two AMD micro instances (`VM.Standard.E2.1.Micro`), 200 GB block storage (min 47 GB boot volume per instance), and 10 TB/month outbound.
-- **Constraints to plan for:** Arm64 images only (verify every wheel builds for `aarch64`), capacity is not guaranteed in a given availability domain ("out of host capacity" is common), instances are the free tier with no SLA, and idle Always Free instances can be reclaimed (roughly: CPU 95th-percentile < 20%, network < 20%, and memory < 20% sustained over ~7 days) — so keep the service genuinely active or expect reclamation.
-- **Networking/security to add:** open only 443 (and 22 for SSH) in both the VCN security list *and* the instance's local firewall; put Nginx or Caddy in front of Uvicorn as a reverse proxy; obtain TLS from Let's Encrypt; run Uvicorn bound to `127.0.0.1` behind the proxy; add the frontend origin to CORS; configure `systemd` (or a container restart policy) so the API survives reboots.
+- **Constraints to plan for:** Arm64 images only (verify every wheel builds for `aarch64`), capacity is not guaranteed in a given availability domain ("out of host capacity" is common), no SLA, and idle Always Free instances can be reclaimed (roughly: CPU 95th-percentile < 20%, network < 20% and memory < 20% sustained over ~7 days).
+- **Networking/security to add:** open only 443 (and 22 for SSH) in both the VCN security list *and* the instance firewall; put Nginx or Caddy in front of Uvicorn; TLS via Let's Encrypt; run Uvicorn bound to `127.0.0.1` behind the proxy; add the frontend's origin to CORS; use `systemd` or a container restart policy.
 
-Sources: [Vercel Functions limits](https://vercel.com/docs/functions/limitations) · [OCI Always Free resources](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm)
+Source: [OCI Always Free resources](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm).
 
-### 10.3 Recommended path for this project
+### 10.4 Remaining deployment work
 
-**Frontend on Vercel, API on an OCI Always Free VM.** The frontend is exactly what a static host is for; the API is a long-lived process holding a loaded model, which is what a VM is for. Vercel-only is cheaper to start but pays for it in cold-start latency and a heavier scientific-Python bundle; OCI-only is viable (serve `frontend/` from the same Nginx) if you would rather manage one origin.
+Done: ✅ frontend + API live on Vercel · ✅ same-origin API wiring · ✅ dependencies declared · ✅ artifact committed · ✅ endpoints verified externally.
 
-Phased checklist — **all steps are unstarted**:
+Remaining, in priority order:
 
-1. [ ] Add `requirements.txt` pinned to the versions in [§9](#9-installation--usage), and make the dataset path configurable.
-2. [ ] Decide artifact delivery (commit it, or download at container start) and confirm it loads on the target platform/architecture.
-3. [ ] Harden the API: enforce input ranges, remove the `"null"` CORS origin, disable `allow_credentials` unless needed, add real logging.
-4. [ ] Provision the OCI VM and run the API behind a `systemd` unit or a container.
-5. [ ] Verify `GET /` and `POST /predict` from *outside* the VM and note the public URL.
-6. [ ] Deploy `frontend/` to Vercel as a static site.
-7. [ ] Set `API_BASE` in `app.js` to the public URL and redeploy.
-8. [ ] Enable HTTPS (Let's Encrypt) and restrict CORS to the exact frontend origin; re-test the `OPTIONS` preflight.
-9. [ ] Run the full flow from a different device/network.
-10. [ ] Write down rollback, log locations, resource limits and a monitoring/maintenance routine.
+1. [ ] Capture the Vercel project settings in `vercel.json` so a redeploy is reproducible from git.
+2. [ ] Pin dependency versions in `requirements.txt` to match the trained artifact.
+3. [ ] Harden the API: enforce input ranges, drop the `"null"` CORS origin, add real logging and a `/health` that checks the model.
+4. [ ] Add a custom domain and uptime monitoring; document rollback (Vercel instant rollback to a previous deployment).
+5. [ ] (Optional) Move the API to an OCI Always Free VM per [§10.3](#103-alternative-oracle-cloud-infrastructure-always-free) if cold starts become unacceptable.
 
 ---
 
@@ -523,18 +562,20 @@ Phased checklist — **all steps are unstarted**:
 - **No server-side input validation.** `/predict` accepts any float, including impossible values (negative BMI, `GenHlth` = 99).
 - **Ordinal features are treated as plain numbers** (not scaled, not one-hot, not target-encoded), so the model assumes equal, linear spacing between e.g. `Age` bands.
 - **Accuracy is dominated by the majority class**; PR-AUC 0.412 and precision 0.366 mean roughly two in three positive flags are false alarms at threshold 0.6.
-- **Weak deployment posture:** `"null"` in the CORS allow-list with credentials enabled, no authentication, no rate limiting, no `/health` endpoint, no structured logging, no `requirements.txt`, a stale `environment.yml`.
+- **Public API with a loose CORS default:** the `"null"` origin is allowed with `allow_credentials=True`, there is no authentication, no rate limiting, no structured logging and no `/health` endpoint.
+- **Frontend duplication.** `frontend/` and `public/` are identical copies kept in sync by hand — they will drift. A build step (or a single source directory) would remove the hazard.
+- **Dependencies are unpinned** in `requirements.txt`, so a redeploy can silently pick up new library versions that may not match the trained artifact.
 - **Minor documentation defects:** notebook 05's title cell reads "04"; notebook 07 §11 refers to a "previous threshold analysis" that does not exist in the notebook; `src/main.py` imports `CORSMiddleware` twice.
 
 **Future improvements, in priority order**
 
-1. **Deploy** the recommended [§10.3](#103-recommended-path-for-this-project) path — the single largest gap between this project and a usable product.
-2. **Add a test suite** — at minimum: artifact key/shape checks, a `/predict` contract test, a "missing feature → 422" test, and a regression test locking the feature order. None exist today.
+1. **Add a test suite** — at minimum: artifact key/shape checks, a `/predict` contract test, a "missing feature → 422" test, and a regression test locking the feature order. None exist today.
+2. **Make the deployment reproducible** — filled-in `vercel.json`, pinned dependencies, and CI that runs the tests before deploying.
 3. **Harden the API** — range validation via Pydantic constraints, strict CORS, authentication, rate limiting, a real `/health`.
 4. **Re-split and re-evaluate** onto a genuinely untouched hold-out to publish honest final numbers.
-5. **Improve the model honestly** — probability calibration, non-linear models with proper cost-sensitive tuning, or ordinal-aware encoding for `Age`/`Education`/`Income`; compare against the current PR-AUC 0.412 rather than against accuracy.
-6. **Fix the defects** listed above and document the *prevalence* context (PR-AUC vs. the 15.3% base rate) in the UI.
-7. **Add packaging** — `requirements.txt`, a `Dockerfile`, and CI to run the tests and rebuild the artifact reproducibly.
+5. **Improve the model honestly** — probability calibration, non-linear models with cost-sensitive tuning, or ordinal-aware encoding for `Age`/`Education`/`Income`; compare against the current PR-AUC 0.412 rather than against accuracy.
+6. **Remove the `frontend/` ↔ `public/` duplication** and surface the *prevalence* context (PR-AUC vs. the 15.3% base rate) in the UI.
+7. **Add packaging** — a `Dockerfile` for the OCI path and a rebuild script for the artifact.
 
 ---
 
@@ -543,36 +584,40 @@ Phased checklist — **all steps are unstarted**:
 ```text
 cdc-diabetes-health-indicators/
 ├── README.md                                  # this document
+├── requirements.txt                           # runtime deps for the API (unpinned)
+├── pyproject.toml                             # project metadata + [tool.vercel] entrypoint
+├── vercel.json                                # Vercel config (currently empty)
 ├── environment.yml                            # stale/incomplete - see 9
-├── .gitignore                                 # ignores data/, caches, venv
+├── .gitignore                                 # ignores data/raw, data/processed, caches, venv
 ├── notebooks/                                 # the full experimentation lifecycle
-│   ├── 01_initial_exploration.ipynb            # shape, missing values, duplicates, target balance
-│   ├── 02_data_cleaning.ipynb                  # dedupe + IQR review -> diabetes_cleaned.csv
-│   ├── 03_univariate_analysis.ipynb            # per-feature distributions
-│   ├── 04_bivariate_analysis.ipynb             # chi-square / Phi / Cramer's V / Mann-Whitney
-│   ├── 05_multivariate_analysis.ipynb          # feature interactions vs diabetes rate
-│   ├── 06_feature_engineering_preparation.ipynb# feature review, 80/20 stratified split, save prepared CSVs
-│   └── 07_modeling_evaluation.ipynb            # baselines, CV, GridSearch, thresholds, final evaluation
+│   ├── 01_initial_exploration.ipynb           # shape, missing values, duplicates, target balance
+│   ├── 02_data_cleaning.ipynb                 # dedupe + IQR review -> diabetes_cleaned.csv
+│   ├── 03_univariate_analysis.ipynb           # per-feature distributions
+│   ├── 04_bivariate_analysis.ipynb            # chi-square / Phi / Cramer's V / Mann-Whitney
+│   ├── 05_multivariate_analysis.ipynb         # feature interactions vs diabetes rate
+│   ├── 06_feature_engineering_preparation.ipynb  # review, 80/20 stratified split, save prepared CSVs
+│   └── 07_modeling_evaluation.ipynb           # baselines, CV, GridSearch, thresholds, final evaluation
 ├── src/
 │   ├── train.py                               # fits the final pipeline, dumps {model, threshold, features}
 │   ├── predict.py                             # loads the artifact, validates input, predict_proba
 │   └── main.py                                # FastAPI app: GET /, POST /predict, CORS
 ├── models/
 │   └── diabetes_model.joblib                  # 3,750 B - the served artifact
-├── frontend/
+├── frontend/                                  # working copy of the UI
 │   ├── index.html                             # form with 21 model inputs
 │   ├── app.js                                 # API_BASE, payload build, result rendering
 │   ├── styles.css                             # design tokens, layout, probability meter
 │   └── logo-animated.html                     # self-contained animated SVG logo widget
-└── data/                                      # git-ignored, not shipped
-    ├── raw/diabetes_binary_health_indicators_BR dataset files areFSS2015.csvd
-    ├── README.md                              #  ataset dow l ad l3nk (track80) x 22 (+ .zip)
-    └── processed/download
+├── public/                                    # identical copy deployed by Vercel as static output
+└── data/                                      # dataset files are git-ignored
+    ├── README.md                              # dataset download link and layout (tracked)
+    ├── raw/diabetes_binary_health_indicators_BRFSS2015.csv   # 253,680 x 22 (download it)
+    └── processed/
         ├── diabetes_cleaned.csv               # 229,474 x 22 (notebook 02)
-        └── prepared/{X_train,X_test,y_train,y_test}.csv        # notebook 06
+        └── prepared/{X_train,X_test,y_train,y_test}.csv      # notebook 06
 ```
 
-Not present (verified): `requirements.txt`, `tests/`, `Dockerfile`, `docker-compose.yml`, `.github/workflows/`, any `LICENSE`, or any deployment config.
+Not present (verified): `tests/`, `Dockerfile`, `docker-compose.yml`, `.github/workflows/`, any `LICENSE`, or any `CI` configuration.
 
 | Layer | Technologies actually used |
 |---|---|
@@ -581,15 +626,17 @@ Not present (verified): `requirements.txt`, `tests/`, `Dockerfile`, `docker-comp
 | Persistence | joblib |
 | Backend | FastAPI, Pydantic, Uvicorn |
 | Frontend | HTML5, CSS3 (custom properties), vanilla JavaScript, inline SVG |
+| Deployment | Vercel (static hosting + Python function), `vercel.json`, `pyproject.toml` |
 | Tooling | Jupyter, Git/GitHub |
 
 ---
 
 ### Author & credits
 
-**Muhammad Ammar** — design, EDA, modeling, API and frontend.
+**Muhammad Ammar** — design, EDA, modeling, API, frontend, deployment.
 
-Data: CDC Diabetes Health Indicators, distributed by the UCI Machine Learning Repository (BRFSS 2015; DOI `10.24432/C53919`). Libraries credited to their respective open-source projects. No other collaborators, affiliations or certifications are claimed.
+Live demo: <https://cdc-diabetes-health-indicators.vercel.app/>
 
-**Remaining TODOs:** confirm the dataset's usage/licence terms, document the exact acquisition URL and date, add a `LICENSE` file, and add the test suite plus deployment configuration described in [§11](#11-limitations--future-improvements) and [§10.3](#103-recommended-path-for-this-project).
-reds download date and confirm it
+Data: CDC Diabetes Health Indicators, distributed by the UCI Machine Learning Repository (BRFSS 2015; DOI `10.24432/C53919`) and downloaded from the [Kaggle mirror](https://www.kaggle.com/datasets/alexteboul/diabetes-health-indicators-dataset). Libraries credited to their respective open-source projects. No other collaborators, affiliations or certifications are claimed.
+
+**Remaining TODOs:** record the dataset's download date and confirm its usage/licence terms, add a `LICENSE` file, commit the Vercel project configuration, and add the test suite described in [§11](#11-limitations--future-improvements).
