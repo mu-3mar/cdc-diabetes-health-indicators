@@ -63,11 +63,7 @@ BRFSS 2015 raw CSV (253,680 × 22)
 
 ## 2. Dataset
 
-**Source.** [CDC Diabetes Health Indicators](https://archive.ics.uci.edu/dataset/891/cdc+diabetes+health+indicators) (UCI ML Repository, dataset ID 891, DOI `10.24432/C53919`), derived from the CDC BRFSS 2015 survey. The repository ships **no** download script or URL — the raw file was placed manually, so the exact acquisition path and access date are **TODO**. The raw CSV in the working tree is dated `2021-11-08`; before redistribution, confirm UCI/CDC usage terms (no license statement is included in this repository).
-
-| Property | Value |
-|---|---|
-| Raw shape | 253,680 rows × 22 columns |
+**Source.** [C[C/cdc+disrchivalita.Lcp.i u/891//3c+heBrchivsuire.ict.e2u/; befor/891/sic+he CDC B+5 surv+yn | Prrep(,, derived from the CDC BRFSS 2015 survey | Rareposisoryashppe | 25,6 download8s0rwp  or URL22 uhe s | filewsplmualy, stheacqisiionph n access e re **TOO.bfrereibutin,cUCI(s)
 | Cleaned shape | 229,474 rows × 22 columns |
 | Train / test split | 183,579 / 45,895 (80/20, stratified, `random_state=42`) |
 | Model features | 21 (all columns except the target) |
@@ -435,7 +431,8 @@ pip install "scikit-learn==1.9.1" "pandas==3.0.6" "numpy==2.5.3" "scipy==1.18.1"
             "joblib==1.6.0" "fastapi==0.162.0" "uvicorn==0.54.0" "imbalanced-learn==0.14.2"
 
 # 4. Place the dataset
-#    Download "CDC Diabetes Health Indicators" (UCI ID 891) and put the file at:
+#    Download from https://www.kaggle.com/datasets/alexteboul/diabetes-health-indicators-dataset
+#    and put diabetes_binary_health_indicators_BRFSS2015.csv at:
 #    data/raw/diabetes_binary_health_indicators_BRFSS2015.csv
 ```
 
@@ -568,8 +565,9 @@ cdc-diabetes-health-indicators/
 │   ├── styles.css                             # design tokens, layout, probability meter
 │   └── logo-animated.html                     # self-contained animated SVG logo widget
 └── data/                                      # git-ignored, not shipped
-    ├── raw/diabetes_binary_health_indicators_BRFSS2015.csv     # 253,680 x 22 (+ .zip)
-    └── processed/
+    ├── raw/diabetes_binary_health_indicators_BR dataset files areFSS2015.csvd
+    ├── README.md                              #  ataset dow l ad l3nk (track80) x 22 (+ .zip)
+    └── processed/download
         ├── diabetes_cleaned.csv               # 229,474 x 22 (notebook 02)
         └── prepared/{X_train,X_test,y_train,y_test}.csv        # notebook 06
 ```
@@ -594,3 +592,4 @@ Not present (verified): `requirements.txt`, `tests/`, `Dockerfile`, `docker-comp
 Data: CDC Diabetes Health Indicators, distributed by the UCI Machine Learning Repository (BRFSS 2015; DOI `10.24432/C53919`). Libraries credited to their respective open-source projects. No other collaborators, affiliations or certifications are claimed.
 
 **Remaining TODOs:** confirm the dataset's usage/licence terms, document the exact acquisition URL and date, add a `LICENSE` file, and add the test suite plus deployment configuration described in [§11](#11-limitations--future-improvements) and [§10.3](#103-recommended-path-for-this-project).
+reds download date and confirm it
