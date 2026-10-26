@@ -1,4 +1,6 @@
+
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from src.predict import predict_diabetes, FEATURES
@@ -9,6 +11,19 @@ app = FastAPI(
     version="1.0.0",
 )
 
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://127.0.0.1:5500",
+        "http://localhost:5500",
+        "null",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class PredictionRequest(BaseModel):
     features: dict[str, float]
@@ -22,7 +37,6 @@ def home():
 @app.post("/predict")
 def predict(request: PredictionRequest):
     try:
-        result = predict_diabetes(request.features)
-        return result
+        return predict_diabetes(request.features)
     except ValueError as error:
         raise HTTPException(status_code=422, detail=str(error))
