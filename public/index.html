@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#FFF8F5">
+  <title>HealthLens — Diabetes Risk Estimate</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="page">
+    <header class="brand-bar">
+      <a class="brand" href="#top" aria-label="HealthLens home">
+        <span class="brand-mark"><iframe class="brand-logo-frame" src="./logo-animated.html?color=%23F04B24&amp;v=2" title="Animated brand logo" aria-label="Animated brand logo" tabindex="-1"></iframe></span>
+        <span><strong>HealthLens</strong><small>HEALTH INDICATORS</small></span>
+      </a>
+      <div class="api-pill"><span class="live-dot"></span><span id="api-status">Checking API…</span></div>
+    </header>
+
+    <section class="intro" id="top">
+      <p class="eyebrow">HEALTH INDICATORS · ML DEMO</p>
+      <h1>Understand your <em>health indicators.</em></h1>
+      <p class="intro-copy">Answer a few questions to get a model-based estimate. It takes about a minute.</p>
+    </section>
+
+    <div class="notice"><span>i</span><p><strong>Educational use only.</strong> This estimate is not a diagnosis and should not guide medical decisions.</p></div>
+
+    <form id="prediction-form" novalidate>
+      <section class="form-card">
+        <div class="card-heading"><div><span class="step">01</span><h2>About you</h2></div><p>Basic information</p></div>
+        <div class="field-grid">
+          <label class="field"><span>Age group</span><input name="Age" type="range" min="1" max="13" step="1" value="9" data-labels="1:18–24 years; 2:25–29 years; 3:30–34 years; 4:35–39 years; 5:40–44 years; 6:45–49 years; 7:50–54 years; 8:55–59 years; 9:60–64 years; 10:65–69 years; 11:70–74 years; 12:75–79 years; 13:80+ years"><output class="range-value">60–64 years</output></label>
+          <fieldset class="field sex-field"><legend>Sex</legend><div class="sex-options" role="radiogroup" aria-label="Sex"><label class="sex-option"><input type="radio" name="Sex" value="0" checked><span>Female</span></label><label class="sex-option"><input type="radio" name="Sex" value="1"><span>Male</span></label></div></fieldset>
+          <label class="field"><span>Body Mass Index (BMI)</span><input name="BMI" type="range" min="12" max="60" step="0.5" value="27"><output class="range-value">27</output><small>Use your known BMI if available.</small></label>
+          <label class="field"><span>General health</span><input name="GenHlth" type="range" min="1" max="5" step="1" value="3" data-labels="1:Poor; 2:Fair; 3:Good; 4:Very good; 5:Excellent"><output class="range-value">Good</output><small>Shown from Poor to Excellent; model encoding is handled automatically.</small></label>
+          <label class="field"><span>Education level</span><input name="Education" type="range" min="1" max="6" step="1" value="6" data-labels="1:Never attended / kindergarten; 2:Grades 1–8; 3:Grades 9–11; 4:Grade 12 / GED; 5:College 1–3 years; 6:College 4+ years"><output class="range-value">College 4+ years</output></label>
+          <label class="field"><span>Income category</span><input name="Income" type="range" min="1" max="8" step="1" value="5" data-labels="1:Under $10,000; 2:$10,000–$14,999; 3:$15,000–$19,999; 4:$20,000–$24,999; 5:$25,000–$34,999; 6:$35,000–$49,999; 7:$50,000–$74,999; 8:$75,000+"><output class="range-value">$25,000–$34,999</output></label>
+          <label class="field"><span>Poor mental health days</span><input name="MentHlth" type="range" min="0" max="30" step="1" value="0"><output class="range-value">0 days</output><small>During the past 30 days</small></label>
+          <label class="field"><span>Poor physical health days</span><input name="PhysHlth" type="range" min="0" max="30" step="1" value="0"><output class="range-value">0 days</output><small>During the past 30 days</small></label>
+        </div>
+      </section>
+
+      <section class="form-card">
+        <div class="card-heading"><div><span class="step">02</span><h2>Medical history</h2></div><p>Toggle what applies</p></div>
+        <div class="toggle-grid">
+          <label class="toggle-field"><span><strong>High blood pressure</strong><small>Ever told you had high blood pressure?</small></span><input class="switch-input" type="checkbox" name="HighBP" value="1" role="switch" aria-label="High blood pressure"></label>
+          <label class="toggle-field"><span><strong>High cholesterol</strong><small>Ever told you had high cholesterol?</small></span><input class="switch-input" type="checkbox" name="HighChol" value="1" role="switch" aria-label="High cholesterol"></label>
+          <label class="toggle-field"><span><strong>Cholesterol check</strong><small>Checked within the past 5 years?</small></span><input class="switch-input" type="checkbox" name="CholCheck" value="1" role="switch" aria-label="Cholesterol check" checked></label>
+          <label class="toggle-field"><span><strong>History of stroke</strong><small>Ever had a stroke?</small></span><input class="switch-input" type="checkbox" name="Stroke" value="1" role="switch" aria-label="History of stroke"></label>
+          <label class="toggle-field"><span><strong>Heart disease / attack</strong><small>History of heart disease or heart attack?</small></span><input class="switch-input" type="checkbox" name="HeartDiseaseorAttack" value="1" role="switch" aria-label="Heart disease or attack"></label>
+          <label class="toggle-field"><span><strong>Difficulty walking</strong><small>Difficulty walking or climbing stairs?</small></span><input class="switch-input" type="checkbox" name="DiffWalk" value="1" role="switch" aria-label="Difficulty walking"></label>
+        </div>
+      </section>
+
+      <section class="form-card">
+        <div class="card-heading"><div><span class="step">03</span><h2>Lifestyle & care</h2></div><p>Habits and access</p></div>
+        <div class="toggle-grid">
+          <label class="toggle-field"><span><strong>Smoker</strong><small>Smoked at least 100 cigarettes in your life?</small></span><input class="switch-input" type="checkbox" name="Smoker" value="1" role="switch" aria-label="Smoker"></label>
+          <label class="toggle-field"><span><strong>Physical activity</strong><small>Any leisure-time physical activity?</small></span><input class="switch-input" type="checkbox" name="PhysActivity" value="1" role="switch" aria-label="Physical activity" checked></label>
+          <label class="toggle-field"><span><strong>Fruit daily</strong><small>Eat fruit at least once a day?</small></span><input class="switch-input" type="checkbox" name="Fruits" value="1" role="switch" aria-label="Fruit daily" checked></label>
+          <label class="toggle-field"><span><strong>Vegetables daily</strong><small>Eat vegetables at least once a day?</small></span><input class="switch-input" type="checkbox" name="Veggies" value="1" role="switch" aria-label="Vegetables daily" checked></label>
+          <label class="toggle-field"><span><strong>Heavy alcohol consumption</strong><small>According to the dataset definition</small></span><input class="switch-input" type="checkbox" name="HvyAlcoholConsump" value="1" role="switch" aria-label="Heavy alcohol consumption"></label>
+          <label class="toggle-field"><span><strong>Healthcare coverage</strong><small>Any kind of healthcare coverage?</small></span><input class="switch-input" type="checkbox" name="AnyHealthcare" value="1" role="switch" aria-label="Healthcare coverage" checked></label>
+          <label class="toggle-field"><span><strong>Skipped doctor due to cost</strong><small>Could not see a doctor because of cost?</small></span><input class="switch-input" type="checkbox" name="NoDocbcCost" value="1" role="switch" aria-label="Skipped doctor due to cost"></label>
+        </div>
+      </section>
+
+      <div class="form-actions"><button type="button" class="reset-button" id="randomize-inputs">⤨ Randomize inputs</button><button type="button" class="reset-button" id="reset-form">Reset answers</button><span>21 indicators · Local API</span><button type="submit" class="primary-button" id="submit-button">Get estimate <span>↗</span></button></div>
+    </form>
+
+    <section class="result-card" id="result-panel" aria-live="polite">
+      <div class="result-top"><span class="result-icon result-symbol">↗</span><div><p class="eyebrow">YOUR RESULT</p><h2 id="result-title">Your estimate will appear here.</h2></div></div>
+      <p id="result-summary">Complete the indicators above, then select “Get estimate”.</p>
+      <div class="probability-block"><div class="probability-label"><span>Probability for class 1</span><strong id="probability-value">—</strong></div><div class="meter"><span id="probability-meter"></span></div><div class="meter-scale"><span>0%</span><span>Threshold 60%</span><span>100%</span></div></div>
+      <div class="error-message" id="error-message" role="alert" hidden></div>
+      <p class="result-disclaimer">This is a machine-learning estimate for educational demonstration, not a medical diagnosis.</p>
+    </section>
+    <footer class="site-footer"><span class="footer-project">HEALTHLENS · EDUCATIONAL ML INTERFACE</span><span class="footer-credit">Designed & built by <strong>Muhammad Ammar</strong></span></footer>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

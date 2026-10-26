@@ -1,4 +1,4 @@
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = "/api";
 const form = document.querySelector("#prediction-form");
 const errorBox = document.querySelector("#error-message");
 const submitButton = document.querySelector("#submit-button");
