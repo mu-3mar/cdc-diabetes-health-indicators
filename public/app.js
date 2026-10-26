@@ -1,4 +1,4 @@
-const API_BASE = "/api";
+const API_BASE = "";
 const form = document.querySelector("#prediction-form");
 const errorBox = document.querySelector("#error-message");
 const submitButton = document.querySelector("#submit-button");
