@@ -2,8 +2,7 @@
 
 An end-to-end machine learning project that predicts diabetes risk from public health indicators, served through a FastAPI backend and a browser-based prediction UI.
 
-**Author:** Muhammad Ammar · **Repository:** [mu-3mar/cdc-diabetes-health-indicators](https://github.com/mu-3mar/cdc-diabetes-health-indicators) (`main`, commit `813b722`)
-
+**Author:** Muhammad Ammar ·
 | | |
 |---|---|
 | **Task** | Binary classification (`Diabetes_binary`: 0 = no diabetes, 1 = diabetes/prediabetes) |
