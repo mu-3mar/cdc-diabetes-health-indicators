@@ -2,9 +2,6 @@
 data/raw/
 data/processed/
 
-# Models
-models/
-
 # Python
 __pycache__/
 *.py[cod]
