@@ -21,3 +21,7 @@ venv/
 
 # OS
 .DS_Store
+
+
+# Images
+healthlens-api.tar
