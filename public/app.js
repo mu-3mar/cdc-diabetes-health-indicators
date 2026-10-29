@@ -26,7 +26,7 @@ async function checkApi() {
 
 function clearResult() {
   errorBox.hidden = true;
-  resultTitle.textContent = "Your estimate will appear here.";
+  resultTitle.textContent = "Your diabetes risk estimate will appear here.";
   resultSummary.textContent = "Complete the indicators above, then select “Get estimate”.";
   probabilityValue.textContent = "—";
   probabilityMeter.style.width = "0%";
@@ -114,13 +114,13 @@ form.addEventListener("submit", async (event) => {
     probabilityMeter.style.width = `${Math.max(0, Math.min(100, probability * 100))}%`;
 
     if (Number(payload.prediction) === 1) {
-      resultTitle.textContent = "Model flagged class 1.";
-      resultSummary.textContent = `The model estimates ${pct}% probability for class 1, at or above its configured decision threshold. This is not a diagnosis.`;
+      resultTitle.textContent = "Elevated diabetes risk indicated.";
+      resultSummary.textContent = `The model estimates a ${pct}% probability of diabetes, at or above its configured decision threshold. This is not a diagnosis.`;
       resultSymbol.textContent = "!";
       resultSymbol.style.color = "var(--accent-dark)";
     } else {
-      resultTitle.textContent = "Model predicted class 0.";
-      resultSummary.textContent = `The model estimates ${pct}% probability for class 1, below its configured threshold. This does not rule out diabetes.`;
+      resultTitle.textContent = "Lower diabetes risk indicated.";
+      resultSummary.textContent = `The model estimates a ${pct}% probability of diabetes, below its configured threshold. This does not rule out diabetes.`;
       resultSymbol.textContent = "✓";
       resultSymbol.style.color = "var(--success)";
     }

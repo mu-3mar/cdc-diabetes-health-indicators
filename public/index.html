@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#FFF8F5">
-  <title>HealthLens — Diabetes Risk Estimate</title>
+  <title>HealthLens — CDC Diabetes Risk Estimator</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -12,18 +12,18 @@
     <header class="brand-bar">
       <a class="brand" href="#top" aria-label="HealthLens home">
         <span class="brand-mark"><iframe class="brand-logo-frame" src="./logo-animated.html?color=%23F04B24&amp;v=2" title="Animated brand logo" aria-label="Animated brand logo" tabindex="-1"></iframe></span>
-        <span><strong>HealthLens</strong><small>HEALTH INDICATORS</small></span>
+        <span><strong>HealthLens</strong><small>CDC DIABETES INDICATORS</small></span>
       </a>
       <div class="api-pill"><span class="live-dot"></span><span id="api-status">Checking API…</span></div>
     </header>
 
     <section class="intro" id="top">
-      <p class="eyebrow">HEALTH INDICATORS · ML DEMO</p>
-      <h1>Understand your <em>health indicators.</em></h1>
-      <p class="intro-copy">Answer a few questions to get a model-based estimate. It takes about a minute.</p>
+      <p class="eyebrow">CDC DIABETES HEALTH INDICATORS · ML DEMO</p>
+      <h1>Estimate your <em>diabetes risk.</em></h1>
+      <p class="intro-copy">Answer 21 questions drawn from the CDC BRFSS health survey. A machine-learning model estimates the likelihood of diabetes from your health indicators. It takes about a minute.</p>
     </section>
 
-    <div class="notice"><span>i</span><p><strong>Educational use only.</strong> This estimate is not a diagnosis and should not guide medical decisions.</p></div>
+    <div class="notice"><span>i</span><p><strong>Educational use only.</strong> This diabetes risk estimate is not a medical diagnosis and should not guide medical decisions.</p></div>
 
     <form id="prediction-form" novalidate>
       <section class="form-card">
@@ -69,13 +69,13 @@
     </form>
 
     <section class="result-card" id="result-panel" aria-live="polite">
-      <div class="result-top"><span class="result-icon result-symbol">↗</span><div><p class="eyebrow">YOUR RESULT</p><h2 id="result-title">Your estimate will appear here.</h2></div></div>
+      <div class="result-top"><span class="result-icon result-symbol">↗</span><div><p class="eyebrow">YOUR RESULT</p><h2 id="result-title">Your diabetes risk estimate will appear here.</h2></div></div>
       <p id="result-summary">Complete the indicators above, then select “Get estimate”.</p>
-      <div class="probability-block"><div class="probability-label"><span>Probability for class 1</span><strong id="probability-value">—</strong></div><div class="meter"><span id="probability-meter"></span></div><div class="meter-scale"><span>0%</span><span>Threshold 60%</span><span>100%</span></div></div>
+      <div class="probability-block"><div class="probability-label"><span>Estimated diabetes probability</span><strong id="probability-value">—</strong></div><div class="meter"><span id="probability-meter"></span></div><div class="meter-scale"><span>0%</span><span>Threshold 60%</span><span>100%</span></div></div>
       <div class="error-message" id="error-message" role="alert" hidden></div>
-      <p class="result-disclaimer">This is a machine-learning estimate for educational demonstration, not a medical diagnosis.</p>
+      <p class="result-disclaimer">This is a machine-learning diabetes risk estimate for educational demonstration, not a medical diagnosis.</p>
     </section>
-    <footer class="site-footer"><span class="footer-project">HEALTHLENS · EDUCATIONAL ML INTERFACE</span><span class="footer-credit">Designed & built by <strong>Muhammad Ammar</strong></span></footer>
+    <footer class="site-footer"><span class="footer-project">HEALTHLENS · CDC DIABETES RISK ESTIMATOR</span><span class="footer-credit">Designed & built by <strong>Muhammad Ammar</strong></span></footer>
   </main>
   <script src="app.js"></script>
 </body>
