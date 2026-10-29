@@ -6,17 +6,20 @@ An end-to-end machine learning project that predicts diabetes risk from public h
 
 No setup required — open the link, fill the form (or press **Randomise Inputs**), and submit. The frontend and the FastAPI backend are both deployed on Vercel.
 
+### ▶ Run the API container: **`docker run --rm -p 8000:8000 mu3mar/healthlens-api`** — image published on [Docker Hub](https://hub.docker.com/r/mu3mar/healthlens-api)
+
 **Author:** Muhammad Ammar · **Repository:** [mu-3mar/cdc-diabetes-health-indicators](https://github.com/mu-3mar/cdc-diabetes-health-indicators)
 
 | | |
 |---|---|
 | **Live demo** | <https://cdc-diabetes-health-indicators.vercel.app/> — frontend + API on Vercel (verified responding: `POST /predict` → 200) |
+| **Container image** | `mu3mar/healthlens-api:latest` on [Docker Hub](https://hub.docker.com/r/mu3mar/healthlens-api) — Python 3.12-slim, 149.4 MB (see [§10.2](#102-docker--containerised-api-image)) |
 | **Task** | Binary classification (`Diabetes_binary`: 0 = no diabetes, 1 = diabetes/prediabetes) |
 | **Data** | CDC Diabetes Health Indicators (BRFSS 2015) — 253,680 rows × 22 columns raw → 229,474 × 22 after cleaning |
 | **Final model** | Logistic Regression (balanced), decision threshold 0.6 |
 | **Final test metrics** | Accuracy 0.775 · PR-AUC 0.412 · class-1 Precision 0.366 / Recall 0.642 / F1 0.466 |
-| **Stack** | Python · scikit-learn · imbalanced-learn · joblib · FastAPI/Uvicorn · vanilla HTML/CSS/JS · Vercel |
-| **Status** | Deployed and working end to end. No test suite. Not containerised. |
+| **Stack** | Python · scikit-learn · imbalanced-learn · joblib · FastAPI/Uvicorn · vanilla HTML/CSS/JS · Docker · Vercel |
+| **Status** | Deployed and working end to end. API also containerised and published to Docker Hub. No test suite. |
 
 > **Not a medical device.** This model outputs a statistical risk estimate from survey indicators. It is **not** a diagnosis, does not replace clinical testing, and must not be used to make health decisions.
 >
@@ -515,7 +518,42 @@ Open `http://127.0.0.1:5500`, fill the form (or press **Randomise Inputs**), sub
 - **No custom domain or health monitoring**, and the deployment is only partly reproducible from the repo: `vercel.json` is empty, so project settings (root directory, build settings) live in the Vercel dashboard, not in git. **TODO:** export that configuration into `vercel.json`.
 - **Free-plan resource limits** apply (below) — fine for a demo, not sized for production traffic.
 
-### 10.2 Vercel limits this deployment lives within
+### 10.2 Docker — containerised API image
+
+The API ships as a self-contained image built from [`Dockerfile`](Dockerfile) and published to Docker Hub as **[`mu3mar/healthlens-api`](https://hub.docker.com/r/mu3mar/healthlens-api)**.
+
+| Piece | Value |
+|---|---|
+| Image | `mu3mar/healthlens-api:latest` (Docker Hub, size ≈149.4 MB) |
+| Base image | `python:3.12-slim` |
+| Baked in at build | `requirements.txt` (installed), `src/` (app + predict + train), `models/diabetes_model.joblib` |
+| Entrypoint | `uvicorn src.main:app --host 0.0.0.0 --port 8000` |
+| Serves | the REST API only (`GET /`, `POST /predict`) — the static frontend is **not** baked in; serve `public/` separately (Vercel, a static server, or a reverse proxy in front of the container) |
+
+**Run the published image**
+
+```bash
+docker run --rm -p 8000:8000 mu3mar/healthlens-api
+# -> http://127.0.0.1:8000          interactive docs: /docs
+```
+
+Then call it exactly as in [§8.1](#81-api-srcmainpy), swapping the host for `http://127.0.0.1:8000`.
+
+**Build it yourself**
+
+```bash
+docker build -t mu3mar/healthlens-api .
+docker run --rm -p 8000:8000 mu3mar/healthlens-api
+```
+
+**Notes**
+
+- The image is API-only and depends only on the committed artifact — it needs neither the dataset nor the notebooks.
+- It listens on `0.0.0.0:8000`; map it to any host port with `-p <host>:8000`.
+- A locally built image targets your machine's architecture. Use `docker buildx build --platform linux/amd64,linux/arm64` if you need multi-arch (e.g. to run on the Arm-based OCI instance in [§10.4](#104-alternative-oracle-cloud-infrastructure-always-free)).
+- The published layer set is not reproducible from the repo alone unless `requirements.txt` is pinned — see [§11](#11-limitations--future-improvements).
+
+### 10.3 Vercel limits this deployment lives within
 
 | Limit (Hobby plan) | Value | Implication here |
 |---|---|---|
@@ -528,7 +566,7 @@ Open `http://127.0.0.1:5500`, fill the form (or press **Randomise Inputs**), sub
 
 Source: [Vercel Functions limits](https://vercel.com/docs/functions/limitations). Verify against the official page before relying on any number.
 
-### 10.3 Alternative: Oracle Cloud Infrastructure (Always Free)
+### 10.4 Alternative: Oracle Cloud Infrastructure (Always Free)
 
 Not implemented — this is the option to consider if you need an always-on process instead of serverless.
 
@@ -539,17 +577,17 @@ Not implemented — this is the option to consider if you need an always-on proc
 
 Source: [OCI Always Free resources](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm).
 
-### 10.4 Remaining deployment work
+### 10.5 Remaining deployment work
 
-Done: ✅ frontend + API live on Vercel · ✅ same-origin API wiring · ✅ dependencies declared · ✅ artifact committed · ✅ endpoints verified externally.
+Done: ✅ frontend + API live on Vercel · ✅ same-origin API wiring · ✅ dependencies declared · ✅ artifact committed · ✅ endpoints verified externally · ✅ API containerised and image published to Docker Hub.
 
 Remaining, in priority order:
 
 1. [ ] Capture the Vercel project settings in `vercel.json` so a redeploy is reproducible from git.
-2. [ ] Pin dependency versions in `requirements.txt` to match the trained artifact.
+2. [ ] Pin dependency versions in `requirements.txt` to match the trained artifact (this also makes the Docker image reproducible).
 3. [ ] Harden the API: enforce input ranges, drop the `"null"` CORS origin, add real logging and a `/health` that checks the model.
 4. [ ] Add a custom domain and uptime monitoring; document rollback (Vercel instant rollback to a previous deployment).
-5. [ ] (Optional) Move the API to an OCI Always Free VM per [§10.3](#103-alternative-oracle-cloud-infrastructure-always-free) if cold starts become unacceptable.
+5. [ ] (Optional) Move the API to an OCI Always Free VM per [§10.4](#104-alternative-oracle-cloud-infrastructure-always-free) if cold starts become unacceptable — the published image can be tagged and pushed there directly.
 
 ---
 
@@ -575,7 +613,7 @@ Remaining, in priority order:
 4. **Re-split and re-evaluate** onto a genuinely untouched hold-out to publish honest final numbers.
 5. **Improve the model honestly** — probability calibration, non-linear models with cost-sensitive tuning, or ordinal-aware encoding for `Age`/`Education`/`Income`; compare against the current PR-AUC 0.412 rather than against accuracy.
 6. **Remove the `frontend/` ↔ `public/` duplication** and surface the *prevalence* context (PR-AUC vs. the 15.3% base rate) in the UI.
-7. **Add packaging** — a `Dockerfile` for the OCI path and a rebuild script for the artifact.
+7. **Finish packaging** — the `Dockerfile` and the Docker Hub image exist ([§10.2](#102-docker--containerised-api-image)); still missing are a rebuild script for the artifact and a `docker-compose.yml` that runs the API and the static frontend together.
 
 ---
 
@@ -587,6 +625,7 @@ cdc-diabetes-health-indicators/
 ├── requirements.txt                           # runtime deps for the API (unpinned)
 ├── pyproject.toml                             # project metadata + [tool.vercel] entrypoint
 ├── vercel.json                                # Vercel config (currently empty)
+├── Dockerfile                                 # python:3.12-slim image for the API (see 10.2)
 ├── environment.yml                            # stale/incomplete - see 9
 ├── .gitignore                                 # ignores data/raw, data/processed, caches, venv
 ├── notebooks/                                 # the full experimentation lifecycle
@@ -617,7 +656,7 @@ cdc-diabetes-health-indicators/
         └── prepared/{X_train,X_test,y_train,y_test}.csv      # notebook 06
 ```
 
-Not present (verified): `tests/`, `Dockerfile`, `docker-compose.yml`, `.github/workflows/`, any `LICENSE`, or any `CI` configuration.
+Not present (verified): `tests/`, `docker-compose.yml`, `.dockerignore`, `.github/workflows/`, any `LICENSE`, or any `CI` configuration.
 
 | Layer | Technologies actually used |
 |---|---|
@@ -626,7 +665,7 @@ Not present (verified): `tests/`, `Dockerfile`, `docker-compose.yml`, `.github/w
 | Persistence | joblib |
 | Backend | FastAPI, Pydantic, Uvicorn |
 | Frontend | HTML5, CSS3 (custom properties), vanilla JavaScript, inline SVG |
-| Deployment | Vercel (static hosting + Python function), `vercel.json`, `pyproject.toml` |
+| Deployment | Vercel (static hosting + Python function), `vercel.json`, `pyproject.toml`; Docker (`Dockerfile`) + Docker Hub for the API image `mu3mar/healthlens-api` |
 | Tooling | Jupyter, Git/GitHub |
 
 ---
