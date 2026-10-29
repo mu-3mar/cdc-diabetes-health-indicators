@@ -47,8 +47,11 @@ document.querySelector("#randomize-inputs").addEventListener("click", () => {
   document.querySelectorAll('input[type="checkbox"]').forEach((input) => {
     input.checked = Math.random() >= 0.5;
   });
-  const sexOptions = [...document.querySelectorAll('input[type="radio"][name="Sex"]')];
-  sexOptions.forEach((input) => { input.checked = Math.random() >= 0.5 ? input.value === "1" : input.value === "0"; });
+  // Decide once so exactly one sex option is selected (never both, never none).
+  const maleSelected = Math.random() >= 0.5;
+  document.querySelectorAll('input[type="radio"][name="Sex"]').forEach((input) => {
+    input.checked = input.value === (maleSelected ? "1" : "0");
+  });
   clearResult();
 });
 
